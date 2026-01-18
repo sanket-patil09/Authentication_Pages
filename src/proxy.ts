@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname; // get's the path from the url
 
-  const isPublicPath = path === "/login" || path === "/signup";
+  const isPublicPath =
+    path === "/login" || path === "/signup" || path === "/verifyemail";
   const token = request.cookies.get("token")?.value || ""; // get token from cookies or empty string
 
   if (isPublicPath && token) {
@@ -20,5 +21,12 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // an array's of paths that will be protected by this middleware
-  matcher: ["/", "/login", "/signup", "/profile", "/profile/:path*"],
+  matcher: [
+    "/",
+    "/login",
+    "/signup",
+    "/profile",
+    "/verifyemail",
+    "/profile/:path*",
+  ],
 };

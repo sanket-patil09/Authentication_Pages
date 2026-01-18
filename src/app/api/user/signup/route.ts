@@ -2,15 +2,23 @@ import connect from "@/src/app/db_config/db_config";
 import { NextResponse, NextRequest } from "next/server";
 import User from "@/src/models/userModel";
 import bcrypt from "bcryptjs";
-
-connect();
+import { sendEmail } from "@/src/helpers/mailer";
 
 export async function POST(request: NextRequest) {
   try {
+    await connect();
     const reqBody = await request.json();
     const { username, email, password } = reqBody;
 
-    // check for the user in the DB with multiple fileds
+    // Validate required fields
+    if (!username || !email || !password) {
+      return NextResponse.json(
+        { error: "Please provide username, email, and password" },
+        { status: 400 }
+      );
+    }
+
+    // check for the user in the DB with multiple fields
     const user = await User.findOne({
       $or: [{ email: email }, { username: username }],
     });
@@ -19,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (user) {
       const field = user.email === email ? "email" : "username";
       return NextResponse.json(
-        { message: `User with this ${field} already exists` },
+        { error: `User with this ${field} already exists` },
         { status: 400 }
       );
     }
@@ -39,6 +47,18 @@ export async function POST(request: NextRequest) {
 
     // saved the user in the DB
     const savedUser = await newUser.save();
+
+    // verify email (don't let email failure break signup)
+    try {
+      await sendEmail({
+        email,
+        emailType: "VERIFY",
+        userId: savedUser._id,
+      });
+    } catch (emailError) {
+      console.log("Email sending failed:", emailError);
+      // Continue with signup even if email fails
+    }
 
     // returned the savedUser with a response message
     return NextResponse.json({

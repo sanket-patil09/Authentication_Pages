@@ -1,8 +1,8 @@
-"use client"; // clint component
+"use client"; // client component
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import axios, { Axios } from "axios";
+import axios from "axios";
 import { useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -19,11 +19,12 @@ export default function SignupPage() {
     try {
       // axios is used to make api calls just like fetch but easier to use
       const response = await axios.post("/api/user/signup", user);
-
+      console.log(response.data);
       // once the api is fetched by axios router redirect's to login page
       router.push("/login");
     } catch (error: any) {
-      toast.error(error.message);
+      console.log(error);
+      toast.error(error.response?.data?.error || error.message);
     }
   };
 
